@@ -21,26 +21,25 @@ n_style_layers = 8
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description= 'Re-implementation of the Style-Swin Paper')
-    parser.add_argument('--batch_size',  type=int, default= 1)
-    parser.add_argument('--lr', type=int, default=1e-3)
-    parser.add_argument('--n_iters', type=int, default=100000)
+    parser.add_argument('--batch_size',  type=int, default=2)
+    parser.add_argument('--n_iters', type=int, default=10000)
     parser.add_argument('--dim', type=int, default=4, help= 'Initial constant input dimension: Height and Width')
-    parser.add_argument('--channel_dim', type=int, default= 32)
-    parser.add_argument('--style_dim', type=int, default=32)
+    parser.add_argument('--channel_dim', type=int, default=64)
+    parser.add_argument('--style_dim', type=int, default=64)
     parser.add_argument('--n_heads', type=int, default=16)
     parser.add_argument('--n_mlp', type=int, default=8)
-    parser.add_argument('--resolution', type=int, default=32)
+    parser.add_argument('--resolution', type=int, default=64)
     parser.add_argument('--n_style_layers', type=int, default=8)
-    parser.add_argument('--d_reg_every', type=int, default= 16)
-    parser.add_argument('--print_freq', type=int, default= 50)
+    parser.add_argument('--d_reg_every', type=int, default=16)
+    parser.add_argument('--print_freq', type=int, default=10)
     
     # disc -args
     parser.add_argument('--n_activ_maps', type=int, default=32)
 
     # optim - args
     parser.add_argument("--scaler", type=float, default=1)
-    parser.add_argument("--gen_lr", type=float, default=0.0002)
-    parser.add_argument("--disc_lr", type=float, default=0.0002)
+    parser.add_argument("--gen_lr", type=float, default=5e-2)
+    parser.add_argument("--disc_lr", type=float, default=5e-2)
     parser.add_argument("--beta1", type=float, default=0.0)
     parser.add_argument("--beta2", type=float, default=0.99)
     parser.add_argument("--attn_drop", type=float, default=0)

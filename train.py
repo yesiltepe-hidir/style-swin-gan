@@ -75,7 +75,7 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
         # Update discriminator
         discriminator.zero_grad()
         d_loss.backward()
-        gradient_clip(discriminator.parameters(), 5.0)
+        # gradient_clip(discriminator.parameters(), 5.0)
         d_optim.step()
 
         # # Employ Gradient Penalty
@@ -138,12 +138,18 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
             wandb.log(visualize_loss, step=iters)
             # print('Iters: {iters}\t ')
 
+            torch.save({'generator': generator.state_dict(),
+                        'discriminator': discriminator.state_dict(),
+                        'args': args}, 'checkpoints/state_dict')
+        
+
 
 if __name__ == '__main__':
     # Set device
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'     
     # Parse Arguments
     args = parse_arguments()
+    print(args.resolution)
     # WandB
     wandb.init(project="styleswin", entity="metugan")
     
@@ -171,15 +177,13 @@ if __name__ == '__main__':
                     ).to(device)
 
     discriminator_learning_rate = args.disc_lr
-    
-    discriminator_learning_rate = args.disc_lr
     discriminator_betas = (args.beta1 , args.beta2)
     d_optim = optim.Adam(discriminator.parameters(), 
                         lr=discriminator_learning_rate, 
                         betas=discriminator_betas)
     
     # Get DataLoader
-    datasetname = 'CIFAR-10'
+    datasetname = 'LSUN'
     root = 'data/'
     batch_size = args.batch_size
     loader = get_data_loader(datasetname, root, batch_size)

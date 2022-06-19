@@ -111,6 +111,13 @@ class Generator(nn.Module):
             self.window_config      =   [4, 8, 8, 8, 8, 8, 8, 8, 8]
             self.head_config        =   [16, 16, 16, 16, 8, 4, 4, 4, 4]
             self.dims               =   [4, 8, 16, 32, 64, 128, 256, 512, 1024]
+        
+        elif resolution==64:
+            self.channel_in_config  =   [512, 256, 128, 64, 32]
+            self.channel_out_config =   [256, 128, 64, 32, 16]
+            self.window_config      =   [4, 8, 8, 8, 8]
+            self.head_config        =   [16, 16, 16, 16, 16]
+            self.dims               =   [4, 8, 16, 32, 64]
 
         elif resolution==32:
             self.channel_in_config  =   [512, 256, 128, 64]

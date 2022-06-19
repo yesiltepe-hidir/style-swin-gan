@@ -8,8 +8,8 @@ def get_data_loader(datasetname, root, batch_size):
                     root = root,
                     classes = ['church_outdoor_train'],
                     transform = transforms.Compose([
-                              transforms.Resize(256),
-                              transforms.CenterCrop(256),
+                              transforms.Resize(64),
+                              transforms.CenterCrop(64),
                               transforms.ToTensor()
                               ])
                     )

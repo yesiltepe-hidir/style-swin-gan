@@ -6,3 +6,5 @@ wandb/
 models/__pycache__/
 __pycache__/
 cifar-10-batches-py/
+checkpoints/
+_cache_datachurchoutdoortrainlmdb
