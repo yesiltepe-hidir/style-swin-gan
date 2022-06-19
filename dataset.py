@@ -19,6 +19,24 @@ def get_data_loader(datasetname, root, batch_size):
                               num_workers = 2,
                               pin_memory = True
       )
+  
+  elif datasetname == 'CIFAR-10':
+      dataset = torchvision.datasets.CIFAR10(
+                    root = root,
+                    train=True,
+                    download=True,
+                    transform = transforms.Compose([
+                              transforms.Resize(32),
+                              transforms.CenterCrop(32),
+                              transforms.ToTensor()
+                              ])
+                    )
+      dataloader = torch.utils.data.DataLoader(
+                              dataset,
+                              batch_size = batch_size,
+                              num_workers = 2,
+                              pin_memory = True
+      )
 
   else:
     raise ValueError(f'No dataset named {datasetname}!')
