@@ -21,7 +21,7 @@ n_style_layers = 8
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description= 'Re-implementation of the Style-Swin Paper')
-    parser.add_argument('--batch_size',  type=int, default=2)
+    parser.add_argument('--batch',  type=int, default=2)
     parser.add_argument('--n_iters', type=int, default=10000)
     parser.add_argument('--dim', type=int, default=4, help= 'Initial constant input dimension: Height and Width')
     parser.add_argument('--channel_dim', type=int, default=64)
@@ -32,17 +32,20 @@ def parse_arguments():
     parser.add_argument('--n_style_layers', type=int, default=8)
     parser.add_argument('--d_reg_every', type=int, default=16)
     parser.add_argument('--print_freq', type=int, default=10)
-    
+    parser.add_argument('--start_iter', type=int, default=0)
     # disc -args
     parser.add_argument('--n_activ_maps', type=int, default=32)
+    parser.add_argument('--gan_weight', type=int, default=10)
 
     # optim - args
     parser.add_argument("--scaler", type=float, default=1)
-    parser.add_argument("--gen_lr", type=float, default=5e-3)
-    parser.add_argument("--disc_lr", type=float, default=2e-2)
+    parser.add_argument("--gen_lr", type=float, default=2e-3)
+    parser.add_argument("--disc_lr", type=float, default=5e-4)
     parser.add_argument("--beta1", type=float, default=0.0)
     parser.add_argument("--beta2", type=float, default=0.99)
     parser.add_argument("--attn_drop", type=float, default=0)
+
+    parser.add_argument("--r1", type=float, default=10)
 
     args = parser.parse_args(args=[])
 
@@ -76,9 +79,9 @@ def adjust_gradient(model, req_grad):
     acc_grad = 0
     for parameter in model.parameters():
         parameter.requires_grad = req_grad
-        print(type(parameter))
-        acc_grad += parameter.grad.clone()
-    
+        if parameter.grad is not None:
+            acc_grad += (parameter.grad.clone()).mean()
+    print(acc_grad)
 
 
 def gradient_penalty(real_pred, real_img):
@@ -87,8 +90,10 @@ def gradient_penalty(real_pred, real_img):
     Takes Real images and prediction for real images.
     Returns the sum of squared gradients.
     """
-    outputs = real_pred.sum()
-    (grads,) = torch.autograd(outputs=outputs, inputs=real_img, create_graph=True)
-    penalty = grads.pow(2).reshape(grads.size(0), -1).sum(1).mean()
+    
 
-    return penalty
+    grad_real, = torch.autograd.grad(
+        outputs=real_pred.sum(), inputs=real_img, create_graph=True
+    )
+    grad_penalty = grad_real.pow(2).reshape(grad_real.shape[0], -1).sum(1).mean()
+    return grad_penalty

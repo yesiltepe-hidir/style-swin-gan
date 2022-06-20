@@ -168,11 +168,12 @@ class Generator(nn.Module):
         x_up, x_trgb = self.basic_blocks[0](input, style)
         gen = x_trgb # generative signal
 
+        # print('gen propg')
         for i in range(1, self.n_transformers):
             bblock = self.basic_blocks[i]
             up = self.up_blocks[i]
             gen = up(gen)
             x_up, x_trgb = bblock(x_up, style)
             gen += x_trgb
-        
+            # print(f'layer: {i} -- neg: {(gen<0).sum()} -- shape: {gen.shape} -- perc: {(gen<0).sum()/torch.ones_like(gen).sum()}')
         return gen

@@ -31,7 +31,7 @@ class Discriminator(nn.Module):
                 [
                     [
                         nn.Conv2d(n_activ_maps*(2**(n_layers-2)), 1, 4, 1, 0, bias=False),
-                        nn.Sigmoid()
+                        nn.LeakyReLU(0.2)
                     ]
                 ]
         net = sum(net, [])
