@@ -1,9 +1,7 @@
-from pkg_resources import require
-from sklearn import discriminant_analysis
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from torch import optim
+from torch import optim, real
 
 from utils import *
 from dataset import get_data_loader
@@ -12,12 +10,13 @@ from models.discriminator import Discriminator
 from models.generator import Generator
 
 import wandb
+import matplotlib.pyplot as plt
 
 # Sample data from the loader
 def get_sample(loader):
     while True:
         for batch in loader:
-            yield batch[0]
+            yield batch
 
 
 # Train Generator and Discriminator
@@ -45,14 +44,18 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
     # L2 loss 
     l2 = nn.MSELoss()
     # Gradient clipping
-    gradient_clip = nn.utils.clip_grad_value_
+    gradient_clip = nn.utils.clip_grad_norm_
 
     for iters in range(args.n_iters):
 
         # ------------------ Train Discriminator -------------------- #
         generator.train()
         # Get batch of images and put them to device
-        real_img = next(loader).to(device)
+        real_img = next(loader)[0].to(device)
+        # real_img_cpy = real_img.clone()
+        # plt.imshow(real_img_cpy[0].permute(1,2,0).cpu().detach())
+        # plt.show()
+
         # Avoid Generator to be updated
         adjust_gradient(generator, False)
         # Permit only discriminator to be updated
@@ -64,6 +67,10 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
 
         # Generate Fake image from random noise
         fake_img = generator(noise)
+        fake_img_cpy = fake_img.clone()
+        plt.imshow(fake_img_cpy[0].permute(1,2,0).cpu().detach())
+        plt.show()
+
         # Get discriminator performance on generated images
         fake_pred = discriminator(fake_img)
         # Get discriminator performance on real images
@@ -71,11 +78,13 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
 
         # Calculate Discriminator Loss
         d_loss = discriminator_loss(real_pred, fake_pred)
+        print('disc grad')
+        # print(d_loss.grad)
 
         # Update discriminator
         discriminator.zero_grad()
         d_loss.backward()
-        # gradient_clip(discriminator.parameters(), 5.0)
+        gradient_clip(discriminator.parameters(), 5.0)
         d_optim.step()
 
         # # Employ Gradient Penalty
@@ -98,14 +107,15 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
 
         
         # ------------------ Train Generator -------------------- #
-        
+        print('generator training grads')
         # Avoid Discriminator to be updated
         adjust_gradient(discriminator, False)
+        print(type(discriminator.parameters()))
         # Permit only generator to be updated
         adjust_gradient(generator, True)
 
         # Get the next batch of real images
-        real_img = next(loader).to(device)
+        real_img = next(loader)[0].to(device)
 
         # Sample random noise from normal distribution
         noise_dim = (args.batch_size, args.style_dim) # ~ initial channel 512
@@ -118,7 +128,9 @@ def train(loader, generator, discriminator, g_optim, d_optim, device, args):
         
         # Calculate the Generator loss
         g_loss = generator_loss(fake_pred) # Ideally, add weight
-
+        print('generator grad')
+        # print(g_loss.grad)
+        
         # Save the loss
         losses['generator'] = g_loss
 
@@ -149,7 +161,7 @@ if __name__ == '__main__':
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'     
     # Parse Arguments
     args = parse_arguments()
-    print(args.resolution)
+
     # WandB
     wandb.init(project="styleswin", entity="metugan")
     

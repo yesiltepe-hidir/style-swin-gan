@@ -28,7 +28,7 @@ def parse_arguments():
     parser.add_argument('--style_dim', type=int, default=64)
     parser.add_argument('--n_heads', type=int, default=16)
     parser.add_argument('--n_mlp', type=int, default=8)
-    parser.add_argument('--resolution', type=int, default=64)
+    parser.add_argument('--resolution', type=int, default=128)
     parser.add_argument('--n_style_layers', type=int, default=8)
     parser.add_argument('--d_reg_every', type=int, default=16)
     parser.add_argument('--print_freq', type=int, default=10)
@@ -38,8 +38,8 @@ def parse_arguments():
 
     # optim - args
     parser.add_argument("--scaler", type=float, default=1)
-    parser.add_argument("--gen_lr", type=float, default=5e-2)
-    parser.add_argument("--disc_lr", type=float, default=5e-2)
+    parser.add_argument("--gen_lr", type=float, default=5e-3)
+    parser.add_argument("--disc_lr", type=float, default=2e-2)
     parser.add_argument("--beta1", type=float, default=0.0)
     parser.add_argument("--beta2", type=float, default=0.99)
     parser.add_argument("--attn_drop", type=float, default=0)
@@ -67,14 +67,18 @@ def generator_loss(fake_pred):
     return gen_loss
 
 
-def adjust_gradient(model, req_grad=True):
+def adjust_gradient(model, req_grad):
     """
     Adjusts the gradient changes required for training Discriminator
     and Generator.
     """
     # Change the model parameters `requires_grad` parameter to input flag
+    acc_grad = 0
     for parameter in model.parameters():
-        parameter.requres_grad = req_grad
+        parameter.requires_grad = req_grad
+        print(type(parameter))
+        acc_grad += parameter.grad.clone()
+    
 
 
 def gradient_penalty(real_pred, real_img):
