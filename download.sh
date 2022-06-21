@@ -5,4 +5,4 @@ rm -rf lsun
 unzip church_outdoor_train_lmdb.zip
 
 # Celeb-A Dataset 
-https://drive.google.com/uc?id=0B7EVK8r0v71pZjFTYXZWM3FlRnM&export=download
+gdown https://drive.google.com/uc?id=0B7EVK8r0v71pZjFTYXZWM3FlRnM&export=download
