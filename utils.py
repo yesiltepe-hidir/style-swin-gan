@@ -19,37 +19,60 @@ resolution = 256
 n_style_layers = 8
 '''
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(description= 'Re-implementation of the Style-Swin Paper')
-    parser.add_argument('--batch',  type=int, default=2)
-    parser.add_argument('--n_iters', type=int, default=10000)
-    parser.add_argument('--dim', type=int, default=4, help= 'Initial constant input dimension: Height and Width')
-    parser.add_argument('--channel_dim', type=int, default=64)
-    parser.add_argument('--style_dim', type=int, default=64)
-    parser.add_argument('--n_heads', type=int, default=16)
-    parser.add_argument('--n_mlp', type=int, default=8)
-    parser.add_argument('--resolution', type=int, default=128)
-    parser.add_argument('--n_style_layers', type=int, default=8)
-    parser.add_argument('--d_reg_every', type=int, default=16)
-    parser.add_argument('--print_freq', type=int, default=10)
-    parser.add_argument('--start_iter', type=int, default=0)
-    # disc -args
-    parser.add_argument('--n_activ_maps', type=int, default=32)
-    parser.add_argument('--gan_weight', type=int, default=10)
+def create_generator(args):
+    try:
+        args.size = args.resolution
+    except AttributeError:
+        args.resolution = args.size
+        args.device = 'cuda:0'
 
-    # optim - args
-    parser.add_argument("--scaler", type=float, default=1)
-    parser.add_argument("--gen_lr", type=float, default=2e-3)
-    parser.add_argument("--disc_lr", type=float, default=5e-4)
-    parser.add_argument("--beta1", type=float, default=0.0)
-    parser.add_argument("--beta2", type=float, default=0.99)
-    parser.add_argument("--attn_drop", type=float, default=0)
+    if args.ourGen:
+        from models.ours.generator_ours import Generator
+        generator = Generator(
+            dim=args.dim,
+            style_dim=args.style_dim,
+            n_style_layers=args.n_style_layers,
+            n_heads=args.n_heads,
+            resolution=args.size,
+            attn_drop=args.attn_drop
+        )
+    else:
+        from models.original.generator import Generator
+        args.n_mlp = 8 
+        args.G_channel_multiplier = 1
+        args.enable_full_resolution = 8
+        args.use_checkpoint = 0
 
-    parser.add_argument("--r1", type=float, default=10)
+        generator = Generator(
+                args.size, args.style_dim, args.n_mlp, channel_multiplier=args.G_channel_multiplier, lr_mlp=args.lr_mlp,
+                enable_full_resolution=args.enable_full_resolution, use_checkpoint=args.use_checkpoint
+            )
+    return generator.to(args.device)
 
-    args = parser.parse_args(args=[])
+def create_discriminator(args):
+    args.size = args.resolution
+    args.D_channel_multiplier = 1
 
-    return args
+    if args.ourDisc:
+                if args.D_sn:
+                    from models.ours.discriminator_ours_spectral import Discriminator
+                else:
+                    from models.ours.discriminator_ours import Discriminator
+                discriminator = Discriminator(resolution=args.size)
+    else:
+        from models.original.discriminator import Discriminator
+        discriminator = Discriminator(args.size, channel_multiplier=args.D_channel_multiplier, sn=args.D_sn)
+    return discriminator.to(args.device)
+
+
+def tensor_transform_reverse(image): # un-normalize lsun transformation
+    assert image.dim() == 4
+    moco_input = torch.zeros(image.size()).type_as(image)
+    moco_input[:,0,:,:] = image[:,0,:,:] * 0.229 + 0.485
+    moco_input[:,1,:,:] = image[:,1,:,:] * 0.224 + 0.456
+    moco_input[:,2,:,:] = image[:,2,:,:] * 0.225 + 0.406
+    return moco_input
+
 
 def discriminator_loss(real_pred, fake_pred):
     """
@@ -81,7 +104,6 @@ def adjust_gradient(model, req_grad):
         parameter.requires_grad = req_grad
         if parameter.grad is not None:
             acc_grad += (parameter.grad.clone()).mean()
-    print(acc_grad)
 
 
 def gradient_penalty(real_pred, real_img):
