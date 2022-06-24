@@ -10,4 +10,4 @@ This folder provides a re-implementation of this paper in PyTorch, developed as 
 * Alpay Özkan, alpay.ozkan@metu.edu.tr 
 * Hıdır Yeşiltepe, hidir.yesiltepe@metu.edu.tr
 
-Please see the jupyter notebook file [main.ipynb](main.ipynb) for a summary of paper, the implementation notes and our experimental results.
+Please see the jupyter notebook file [main.ipynb](main_demos.ipynb) for a summary of paper, the implementation notes and our experimental results.
