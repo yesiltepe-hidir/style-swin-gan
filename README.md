@@ -3,8 +3,8 @@
  Bowen Zhang, Shuyang Gu, Bo Zhang, Jianmin Bao, Dong Chen, Fang Wen, Yong Wang, Baining Guo
  
  CVPR 2022
-
-**HERE: Add a simple picture from your results**
+ 
+![alt text](img/demos.png "Church Samples")
 
 This folder provides a re-implementation of this paper in PyTorch, developed as part of the course METU CENG 796 - Deep Generative Models. The re-implementation is provided by:
 * Alpay Özkan, alpay.ozkan@metu.edu.tr 
