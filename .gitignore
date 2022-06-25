@@ -9,3 +9,4 @@ cifar-10-batches-py/
 checkpoints/
 _cache_datachurchoutdoortrainlmdb
 img_align_celeba.zipxy2seu6etmp
+_cache*
