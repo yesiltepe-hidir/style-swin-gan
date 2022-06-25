@@ -5,21 +5,67 @@ import torch.nn as nn
 from torch.nn import functional as F
 import argparse
 
-'''
-dim = 4
-batch_size = 2
-style_dim = 256
-n_mlp = 8
-channel_dim = 512
-attn_drop = 0.
-n_heads = 16
-resolution = 256
 
-# style-massage
-n_style_layers = 8
-'''
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
+import numpy as np
+
+
+def generate_img(args, generator, isNorm=True):
+    '''
+    Generates a single img given generator.
+    '''
+    # Sample an image
+    style_dim = args.style_dim
+    noise = torch.randn((1, style_dim)).to(args.device)
+    img1 = generator(noise)
+
+    if not args.ourGen: # their model returns also the latent space, but we dont
+        img1 = img1[0]
+    
+    if isNorm: # if img is normalized => denormalize
+        img1 = tensor_transform_reverse(img1)
+
+    img = img1[0].cpu().permute(1,2,0).detach()
+    plt.imshow(img)
+    plt.axis('off')
+
+
+def generate_img_grid(args, generator, nrows_ncols=(5,4), isNorm=True):
+    '''
+    Generates image grid of shape nrows_ncols similar to figure-12 and figure-13 in the paper.
+    '''
+    img_list = []
+    for i in range(20):
+        style_dim = args.style_dim
+        noise = torch.randn((1, style_dim)).to(args.device)
+        img1 = generator(noise)
+
+        if not args.ourGen: # their model returns also the latent space, but we dont
+            img1 = img1[0]
+        
+        if isNorm:
+            img1 = tensor_transform_reverse(img1)
+
+        img = img1[0].cpu().permute(1,2,0).detach()
+        img_list.append(img)
+
+    fig = plt.figure(figsize=(100., 100.))
+    grid = ImageGrid(fig, 111,  # similar to subplot(111)
+                     nrows_ncols=nrows_ncols,  # creates 2x2 grid of axes
+                     axes_pad=0.1,  # pad between axes in inch.
+                     )
+
+    for ax, im in zip(grid, img_list):
+        # Iterating over the grid returns the Axes.
+        ax.imshow(im)
+    plt.show()
 
 def create_generator(args):
+    '''
+    Given arguments for a model configuration, creates the generator.
+    '''
+
     try:
         args.size = args.resolution
     except AttributeError:
@@ -50,6 +96,10 @@ def create_generator(args):
     return generator.to(args.device)
 
 def create_discriminator(args):
+    '''
+    Given arguments for a model configuration, creates the discriminator.
+    '''
+
     args.size = args.resolution
     args.D_channel_multiplier = 1
 
@@ -65,7 +115,10 @@ def create_discriminator(args):
     return discriminator.to(args.device)
 
 
-def tensor_transform_reverse(image): # un-normalize lsun transformation
+def tensor_transform_reverse(image):
+    ''' 
+    un-normalize lsun (shift-scale) transformation 
+    '''
     assert image.dim() == 4
     moco_input = torch.zeros(image.size()).type_as(image)
     moco_input[:,0,:,:] = image[:,0,:,:] * 0.229 + 0.485
