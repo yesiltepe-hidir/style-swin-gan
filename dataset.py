@@ -3,6 +3,13 @@ import torch
 import torchvision
 from torchvision import transforms
 
+
+# Sample data from the loader
+def get_sample(loader):
+    while True:
+        for batch in loader:
+            yield batch
+
 def get_data_loader(datasetname, root, batch_size, transform):
   if datasetname == 'LSUN':
       dataset = torchvision.datasets.LSUN(
